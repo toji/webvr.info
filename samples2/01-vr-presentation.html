@@ -13,11 +13,7 @@ found in the LICENSE file.
 
     <title>01 - VR Presentation</title>
 
-    <!--
-      This sample demonstrates how to present a simple WebGL scene to a
-      VRDevice. The scene is not rendered to the page prior to VR presentation,
-      nor is it mirrored during presentation.
-    -->
+    <link href="css/common.css" rel="stylesheet"></link>
 
     <script src="js/third-party/gl-matrix-min.js"></script>
 
@@ -30,6 +26,14 @@ found in the LICENSE file.
     <script src="js/vr-samples-util.js"></script>
   </head>
   <body>
+    <header>
+      <h1>01 - VR Presentation</h1>
+      <p>
+        This sample demonstrates how to present a simple WebGL scene to a
+        VRDevice. The scene is not rendered to the page prior to VR
+        presentation, nor is it mirrored during presentation.
+      </p>
+    </header>
     <script>
       /* global mat4, VRCubeSea, WGLUStats, WGLUTextureLoader, VRSamplesUtil */
       (function () {
@@ -76,7 +80,7 @@ found in the LICENSE file.
           // Request a list of all the VR Devices connected to the system.
           navigator.vr.getDevices().then((devices) => {
             // Add each device to the "Enter VR" button.
-            for (let device in devices) {
+            for (let device of devices) {
               vrButton.addDevice(device);
             }
           });
@@ -86,7 +90,7 @@ found in the LICENSE file.
       // Called when the user selects a device to present to. In response we
       // will request an exclusive session from that device.
       function onRequestSession(device) {
-        device.requestSession().then(onSessionStarted);
+        device.requestSession({ exclusive: true }).then(onSessionStarted);
       }
 
       // Called when we've successfully acquired a VRSession. In response we

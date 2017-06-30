@@ -287,7 +287,7 @@ class EnterVRButton {
    * @param {string} [options.disabledOpacity] set opacity of button dom when disabled
    * @param {string} [options.cssprefix] set to change the css prefix from default 'webvr-ui'
    */
-  constructor(sourceCanvas, options) {
+  constructor(options) {
     options = options || {};
 
     options.color = options.color || 'rgb(80,168,252)';
@@ -467,7 +467,7 @@ class EnterVRButton {
       this.__setDisabledAttribute(false);
     } else if (this.devices.length == 1) {
       this.setTitle(this.options.textEnterVRTitle);
-      this.setTooltip('Enter VR using ' + this.manager.defaultDisplay.displayName);
+      this.setTooltip('Enter VR using ' + this.devices[0].deviceName);
       this.__setDisabledAttribute(false);
     } else {
       this.setTitle(this.options.textVRNotFoundTitle);
