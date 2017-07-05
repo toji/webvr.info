@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+Copyright 2017 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <title>Scene tester</title>
+
+    <link href="css/common.css" rel="stylesheet"></link>
+
+    <script src="js/third-party/gl-matrix-min.js"></script>
+
+    <script src="js/third-party/wglu/wglu-program.js"></script>
+    <script src="js/third-party/wglu/wglu-stats.js"></script>
+    <script src="js/third-party/wglu/wglu-texture.js"></script>
+
+    <script src="js/vr-button.js"></script>
+    <script src="js/vr-scene.js"></script>
+    <script src="js/vr-samples-util.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Scene Tester</h1>
+      <p>
+        Just a simple test page to allow developers to test sample scenes
+        without a headset.
+      </p>
+    </header>
+    <script>
+      (function () {
+      "use strict";
+
+      var projectionMat = mat4.create();
+      var viewMat = mat4.create();
+
+      let scene = null;
+      let gl = VRSamplesUtil.initWebGLContext();
+      document.body.appendChild(gl.canvas);
+
+      function setScene(new_scene) {
+        scene = new_scene;
+        scene.setWebGLContext(gl);
+      }
+
+      function onResize () {
+        gl.canvas.width = gl.canvas.offsetWidth * window.devicePixelRatio;
+        gl.canvas.height = gl.canvas.offsetHeight * window.devicePixelRatio;
+
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        mat4.perspective(projectionMat, Math.PI*0.4,
+                         gl.canvas.width/gl.canvas.height,
+                         0.1, 1024.0);
+      }
+      window.addEventListener("resize", onResize);
+      onResize();
+
+      function onGLFrame() {
+        window.requestAnimationFrame(onGLFrame);
+
+        if (!scene)
+          return;
+
+        scene.startFrame();
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        scene.draw(projectionMat, viewMat);
+
+        scene.endFrame();
+      }
+      window.requestAnimationFrame(onGLFrame);
+
+      setScene(new WebVRCubeSeaScene());
+      })();
+    </script>
+  </body>
+</html>
