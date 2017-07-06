@@ -2,95 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-class WebVRScene {
-  constructor() {
-    this._gl = null;
-
-    this._timestamp = performance.now();
-    this._statsEnabled = true;
-    this._stats = null;
-    this._statsMat = mat4.create();
-
-    this.textureLoader = null;
-  }
-
-  setWebGLContext(gl) {
-    this._gl = gl;
-
-    if (gl) {
-      if (this._statsEnabled) {
-        this._stats = new WGLUStats(gl);
-      }
-      this.textureLoader = new WGLUTextureLoader(gl);
-
-      this.onLoadScene(gl);
-    }
-  }
-
-  loseWebGLContext() {
-    if (this._gl) {
-      this._gl = null;
-      this._stats = null;
-      this.textureLoader = null;
-    }
-  }
-
-  enableStats(enable) {
-    if (enable == this._statsEnabled)
-      return;
-
-    this._statsEnabled = enable;
-
-    if (enable && this.gl) {
-      this._stats = new WGLUStats(this.gl);
-    } else if (!enable) {
-      this._stats = null;
-    }
-  }
-
-  draw(projectionMat, viewMat) {
-    if (!this._gl) {
-      // Don't draw when we don't have a valid context
-      return;
-    }
-
-    this.onDrawView(this._gl, this._timestamp, projectionMat, viewMat);
-
-    if (this.stats) {
-      this._onDrawStats(projectionMat, viewMat);
-    }
-  }
-
-  startFrame() {
-    this._timestamp = performance.now();
-    if (this._stats) {
-      this._stats.begin();
-    }
-  }
-
-  endFrame() {
-    if (this._stats) {
-      this._stats.end();
-    }
-  }
-
-  // Override to load scene resources on construction or context restore.
-  onLoadScene(gl) {}
-
-  // Override with custom scene rendering.
-  onDrawView(gl, timestamp, projectionMat, viewMat) {}
-
-  _onDrawStats(projectionMat, viewMat) {
-    // To ensure that the FPS counter is visible in VR mode we have to
-    // render it as part of the scene.
-    mat4.fromTranslation(this.statsMat, [0, -0.3, -0.5]);
-    mat4.scale(this.statsMat, this.statsMat, [0.3, 0.3, 0.3]);
-    mat4.rotateX(this.statsMat, this.statsMat, -0.75);
-    mat4.multiply(this.statsMat, viewMat, this.statsMat);
-    this.stats.render(projectionMat, this.statsMat);
-  }
-}
-
 const VRCubeSeaVS = `
   uniform mat4 projectionMat;
   uniform mat4 modelViewMat;
@@ -125,7 +36,7 @@ const VRCubeSeaFS = `
   }
 `;
 
-class WebVRCubeSeaScene extends WebVRScene {
+class WebVRSceneCubeSea extends WebVRScene {
   constructor(gridSize) {
     super();
 
@@ -137,7 +48,7 @@ class WebVRCubeSeaScene extends WebVRScene {
   }
 
   onLoadScene(gl) {
-    this.texture = this.textureLoader.loadTexture("media/textures/cube-sea.png");
+    this.texture = this.texture_loader.loadTexture("media/textures/cube-sea.png");
 
     this.program = new WGLUProgram(gl);
     this.program.attachShaderSource(VRCubeSeaVS, gl.VERTEX_SHADER);
@@ -255,13 +166,13 @@ class WebVRCubeSeaScene extends WebVRScene {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeIndices), gl.STATIC_DRAW);
   }
 
-  onDrawView(gl, timestamp, projectionMat, viewMat) {
+  onDrawView(gl, timestamp, projection_mat, view_mat) {
     let program = this.program;
 
     program.use();
 
-    gl.uniformMatrix4fv(program.uniform.projectionMat, false, projectionMat);
-    gl.uniformMatrix4fv(program.uniform.modelViewMat, false, viewMat);
+    gl.uniformMatrix4fv(program.uniform.projectionMat, false, projection_mat);
+    gl.uniformMatrix4fv(program.uniform.modelViewMat, false, view_mat);
     mat3.identity(this.normalMat);
     gl.uniformMatrix3fv(program.uniform.normalMat, false, this.normalMat);
 
@@ -284,7 +195,7 @@ class WebVRCubeSeaScene extends WebVRScene {
 
     if (timestamp) {
       mat4.fromRotation(this.heroRotationMat, timestamp / 2000, [0, 1, 0]);
-      mat4.multiply(this.heroModelViewMat, viewMat, this.heroRotationMat);
+      mat4.multiply(this.heroModelViewMat, view_mat, this.heroRotationMat);
       gl.uniformMatrix4fv(program.uniform.modelViewMat, false, this.heroModelViewMat);
 
       // We know that the additional model matrix is a pure rotation,
