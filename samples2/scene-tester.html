@@ -22,7 +22,6 @@ found in the LICENSE file.
     <script src="js/third-party/wglu/wglu-texture.js"></script>
 
     <script src="js/webvr-button.js"></script>
-    <script src="js/webvr-input-renderer.js"></script>
     <script src="js/webvr-scene.js"></script>
     <script src="js/webvr-scene-cube-sea.js"></script>
     <script src="js/webvr-samples-util.js"></script>
@@ -132,8 +131,6 @@ found in the LICENSE file.
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         scene.draw(projection_mat, view_mat);
-
-        input_renderer.draw(projection_mat, view_mat);
 
         scene.endFrame();
       }

@@ -169,6 +169,8 @@ found in the LICENSE file.
             // into the VRWebGLLayer's framebuffer, using the viewport into that
             // framebuffer reported by the current view, and using the
             // projection and view matricies from the current view and pose.
+            // We bound the framebuffer and viewport up above, and are passing
+            // in the appropriate matrices here to be used when rendering.
             scene.draw(view.projectionMatrix, pose.getViewMatrix(view));
           }
         }
