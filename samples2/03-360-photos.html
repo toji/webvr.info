@@ -98,7 +98,7 @@ found in the LICENSE file.
         // solely on the device orientation. (As an added bonus this mode may
         // be more power efficent on some hardware!)
         // TODO: Don't use eyeLevel
-        vrSession.requestFrameOfReference("eyeLevel").then((frameOfRef) => {
+        vrSession.requestFrameOfReference("headModel").then((frameOfRef) => {
           vrFrameOfRef = frameOfRef;
 
           vrSession.requestFrame(onVRFrame);
