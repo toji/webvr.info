@@ -49,13 +49,18 @@ class WebVRScene {
     }
   }
 
-  draw(projection_mat, view_mat) {
+  draw(projection_mat, view_mat, eye) {
     if (!this._gl) {
       // Don't draw when we don't have a valid context
       return;
     }
 
-    this.onDrawView(this._gl, this._timestamp, projection_mat, view_mat);
+    // If an eye wasn't given just assume the left eye.
+    if (!eye) {
+      eye = "left";
+    }
+
+    this.onDrawView(this._gl, this._timestamp, projection_mat, view_mat, eye);
 
     if (this._stats_enabled) {
       this._onDrawStats(projection_mat, view_mat);
@@ -88,7 +93,7 @@ class WebVRScene {
   onLoadScene(gl) {}
 
   // Override with custom scene rendering.
-  onDrawView(gl, timestamp, projection_mat, view_mat) {}
+  onDrawView(gl, timestamp, projection_mat, view_mat, eye) {}
 
   _onDrawStats(projection_mat, view_mat) {
     // To ensure that the FPS counter is visible in VR mode we have to

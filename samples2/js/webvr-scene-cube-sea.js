@@ -166,7 +166,7 @@ class WebVRSceneCubeSea extends WebVRScene {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeIndices), gl.STATIC_DRAW);
   }
 
-  onDrawView(gl, timestamp, projection_mat, view_mat) {
+  onDrawView(gl, timestamp, projection_mat, view_mat, eye) {
     let program = this.program;
 
     program.use();
