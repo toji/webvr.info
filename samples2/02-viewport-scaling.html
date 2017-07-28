@@ -77,7 +77,7 @@ found in the LICENSE file.
           onRequestSession: onRequestSession,
           onEndSession: onEndSession
         });
-        document.body.appendChild(vrButton.domElement);
+        document.querySelector('header').appendChild(vrButton.domElement);
 
         if (navigator.vr) {
           navigator.vr.getDevices().then((devices) => {
@@ -136,21 +136,23 @@ found in the LICENSE file.
 
       // Called every time the VRSession requests that a new frame be drawn.
       function onVRFrame(frame) {
+        let session = frame.session;
+
         scene.startFrame();
 
         // Adjust the viewports if needed.
         adjustViewportScale();
 
-        vrSession.requestFrame(onVRFrame);
+        session.requestFrame(onVRFrame);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, vrSession.baseLayer.framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, session.baseLayer.framebuffer);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         let pose = frame.getDevicePose(vrFrameOfRef);
 
         if (pose) {
           for (let view of frame.views) {
-            let viewport = view.getViewport(vrSession.baseLayer);
+            let viewport = view.getViewport(session.baseLayer);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
 

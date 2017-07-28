@@ -57,7 +57,7 @@ found in the LICENSE file.
           onRequestSession: onRequestSession,
           onEndSession: onEndSession
         });
-        document.body.appendChild(vrButton.domElement);
+        document.querySelector('header').appendChild(vrButton.domElement);
 
         if (navigator.vr) {
           navigator.vr.getDevices().then((devices) => {
@@ -83,7 +83,6 @@ found in the LICENSE file.
                   session.requestFrameOfReference("eyeLevel").then((frameOfRef) => {
                     vrNonExclusiveFrameOfRef = frameOfRef;
                     onSessionStarted(session);
-                    session.requestFrame(onNonExlusiveVRFrame);
                   });
                 });
           });
@@ -101,7 +100,6 @@ found in the LICENSE file.
           session.requestFrameOfReference("eyeLevel").then((frameOfRef) => {
             vrExclusiveFrameOfRef = frameOfRef;
             onSessionStarted(session);
-            session.requestFrame(onExlusiveVRFrame);
           });
         });
       }
@@ -118,6 +116,8 @@ found in the LICENSE file.
         }
 
         session.baseLayer = new VRWebGLLayer(session, gl);
+
+        session.requestFrame(onVRFrame);
       }
 
       // Called when the user clicks the "Exit VR" button. In response we end
@@ -139,23 +139,20 @@ found in the LICENSE file.
         vrNonExclusiveSession = null;
       }
 
-      function onExclusiveVRFrame(frame) {
-        vrExclusiveSession.requestFrame(onExclusiveVRFrame);
-        onVRFrame(frame, vrExclusiveSession, vrExclusiveFrameOfRef);
-      }
-
-      function onNonExlusiveVRFrame(frame) {
-        vrNonExclusiveSession.requestFrame(onNonExlusiveVRFrame);
-        onVRFrame(frame, vrNonExclusiveSession, vrNonExclusiveFrameOfRef);
-      }
-
       // Called every time a VRSession requests that a new frame be drawn.
-      function onVRFrame(frame, session, frameOfRef) {
+      function onVRFrame(frame) {
+        let session = frame.session;
+
         scene.startFrame();
+
+        session.requestFrame(onVRFrame);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, session.baseLayer.framebuffer);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+        // Ensure that we're using the right frame of reference for the session.
+        let frameOfRef = (session == vrExclusiveSession ?
+            vrExclusiveFrameOfRef : vrNonExclusiveFrameOfRef);
         let pose = frame.getDevicePose(frameOfRef);
 
         if (pose) {

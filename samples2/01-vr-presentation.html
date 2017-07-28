@@ -57,7 +57,7 @@ found in the LICENSE file.
           onRequestSession: onRequestSession,
           onEndSession: onEndSession
         });
-        document.body.appendChild(vrButton.domElement);
+        document.querySelector('header').appendChild(vrButton.domElement);
 
         // Is WebVR available on this UA?
         if (navigator.vr) {
@@ -134,15 +134,17 @@ found in the LICENSE file.
 
       // Called every time the VRSession requests that a new frame be drawn.
       function onVRFrame(frame) {
+        let session = frame.session;
+
         // Per-frame scene setup. Nothing WebVR specific here.
         scene.startFrame();
 
         // Inform the session that we're ready for the next frame.
-        vrSession.requestFrame(onVRFrame);
+        session.requestFrame(onVRFrame);
 
         // Bind the WebGL layer's framebuffer, which is where any content to be
         // displayed on the VRDevice must be rendered.
-        gl.bindFramebuffer(gl.FRAMEBUFFER, vrSession.baseLayer.framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, session.baseLayer.framebuffer);
 
         // Clear the framebuffer
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -160,7 +162,7 @@ found in the LICENSE file.
           // If we do have a valid pose, loop through each of the views reported
           // by the frame and draw them into the corresponding viewport.
           for (let view of frame.views) {
-            let viewport = view.getViewport(vrSession.baseLayer);
+            let viewport = view.getViewport(session.baseLayer);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
 
