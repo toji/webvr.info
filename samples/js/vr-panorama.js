@@ -164,11 +164,11 @@ window.VRPanorama = (function () {
 
       // These lines are required to play the video on iPhone
       video.setAttribute("playsinline", "");
+      // This is for iOS 8 and 9 only, above line required for 10+.
       video.setAttribute("webkit-playsinline", "");
 
       video.loop = true;
       video.crossOrigin = 'anonymous';
-      video.setAttribute('webkit-playsinline', '');
       video.src = url;
 
       // As the video is never visible on the page, we must explicitly
