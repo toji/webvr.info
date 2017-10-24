@@ -162,7 +162,7 @@ window.VRPanorama = (function () {
       // Videos must be muted to play without a user gesture.
       video.muted = true;
 
-      // These lines are required to play the video on iPhone
+      // These lines are required to play the video on iOS.
       video.setAttribute("playsinline", "");
       // This is for iOS 8 and 9 only, above line required for 10+.
       video.setAttribute("webkit-playsinline", "");
