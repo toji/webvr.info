@@ -60,7 +60,7 @@ found in the LICENSE file.
         InitializeWebVRPolyfill();
       } else {
         // Shim for migration from older version of WebVR. Shouldn't be necessary for very long.
-        InitializeSpecShim();
+        WebVRPolyfill.InstallWebVRSpecShim();
       }
     </script>
     <!-- End sample polyfill enabling logic -->
