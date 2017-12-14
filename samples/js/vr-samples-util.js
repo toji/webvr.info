@@ -200,12 +200,16 @@ window.VRSamplesUtil = (function () {
     }
 
     window.addEventListener('vrdisplaypresentchange', (event) => {
-      if (event.display.isPresenting) {
+      // When using the polyfill, CustomEvents require event properties to
+      // be attached to the `detail` property; native implementations
+      // are able to attach `display` directly on the event.
+      var display = event.detail ? event.detail.display : event.display;
+      if (display.isPresenting) {
         let scheduleFrame = !presentingDisplay;
-        presentingDisplay = event.display;
+        presentingDisplay = display;
         if (scheduleFrame)
           onClickListenerFrame();
-      } else if (presentingDisplay == event.display) {
+      } else if (presentingDisplay == display) {
         presentingDisplay = null;
       }
     });
