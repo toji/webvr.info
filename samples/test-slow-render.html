@@ -91,6 +91,9 @@ found in the LICENSE file.
       var standardSize = WGLUUrl.getBool('standardSize', false);
       var renderScale = WGLUUrl.getFloat('renderScale', 1.0);
       var latencyPatch = WGLUUrl.getBool('latencyPatch', false);
+      var pureFlickerApp = WGLUUrl.getBool('pureFlickerApp', false);
+
+      var VELOCITY_SCALE = 0.25;
 
       // ================================
       // WebVR-specific code begins here.
@@ -268,6 +271,18 @@ found in the LICENSE file.
           vrDisplay.getFrameData(frameData);
 
           if (vrDisplay.isPresenting) {
+            if (pureFlickerApp) {
+              // Disable normal rendering and only act as a flicker app
+              // Useful on slow devices where rendering the cube sea and latency
+              // patch together has a significant effect on performance
+              let angularVelocity = vec3.len(frameData.pose.angularVelocity);
+              let brightness = Math.min(angularVelocity * VELOCITY_SCALE, 1.0);
+              gl.clearColor(brightness, brightness, brightness, 1.0);
+              gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+              vrDisplay.submitFrame();
+              return;
+            }
+
             gl.viewport(0, 0, webglCanvas.width * 0.5, webglCanvas.height);
             cubeSea.render(frameData.leftProjectionMatrix, frameData.leftViewMatrix, stats, t);
 
@@ -278,7 +293,6 @@ found in the LICENSE file.
               // Draw a square overlay in the right eye with brightness
               // proportional to the magnitude of the headset's angular
               // velocity. This is intended for a hardware latency tester.
-              let VELOCITY_SCALE = 0.25;
               let angularVelocity = vec3.len(frameData.pose.angularVelocity);
               let brightness = Math.min(angularVelocity * VELOCITY_SCALE, 1.0);
               gl.scissor(webglCanvas.width * 0.625, webglCanvas.height * 0.25,
