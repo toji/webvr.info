@@ -84,6 +84,7 @@ found in the LICENSE file.
       var viewMat = mat4.create();
       var vrPresentButton = null;
 
+      var noFrames = WGLUUrl.getBool('noFrames', false);
       var heavyGpu = WGLUUrl.getBool('heavyGpu', false);
       var cubeCount = WGLUUrl.getInt('cubeCount', heavyGpu ? 12 : 10);
       var cubeScale = WGLUUrl.getFloat('cubeScale', 1.0);
@@ -250,7 +251,13 @@ found in the LICENSE file.
         if (!gl || !stats || !cubeSea) {
           return;
         }
+
         stats.begin();
+
+        // Simulate a poorly designed app that doesn't provide frames.
+        if(noFrames) {
+          return;
+        }
 
         if (simulatedWorkTimeMs > 0) {
           // Simulate a heavy Javascript workload
