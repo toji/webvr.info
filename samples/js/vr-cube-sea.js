@@ -117,7 +117,7 @@ window.VRCubeSea = (function () {
     "}"
   ].join("\n");
 
-  var CubeSea = function (gl, texture, gridSize, cubeScale, heavy) {
+  var CubeSea = function (gl, texture, gridSize, cubeScale, heavy, halfOnly, autorotate) {
     this.gl = gl;
 
     if (!gridSize) {
@@ -128,6 +128,8 @@ window.VRCubeSea = (function () {
     this.normalMat = mat3.create();
     this.heroRotationMat = mat4.create();
     this.heroModelViewMat = mat4.create();
+    this.autoRotationMat = mat4.create();
+    this.cubesModelViewMat = mat4.create();
 
     this.texture = texture;
 
@@ -141,6 +143,8 @@ window.VRCubeSea = (function () {
     });
     this.program.link();
 
+    this.autorotate = autorotate;
+
     var cubeVerts = [];
     var cubeIndices = [];
 
@@ -148,6 +152,12 @@ window.VRCubeSea = (function () {
     function appendCube (x, y, z, size) {
       if (!x && !y && !z) {
         // Don't create a cube in the center.
+        return;
+      }
+
+      if (halfOnly && x < 0) {
+        // Only draw cubes on one side. Useful for testing variable render cost
+        // that depends on view direction.
         return;
       }
 
@@ -249,9 +259,17 @@ window.VRCubeSea = (function () {
 
     program.use();
 
+    if (this.autorotate && timestamp) {
+      mat4.fromRotation(this.autoRotationMat, timestamp / 500, [0, -1, 0]);
+      mat4.multiply(this.cubesModelViewMat, modelViewMat, this.autoRotationMat);
+      mat3.fromMat4(this.normalMat, this.autoRotationMat);
+    } else {
+      this.cubesModelViewMat = modelViewMat;
+      mat3.identity(this.normalMat);
+    }
+
     gl.uniformMatrix4fv(program.uniform.projectionMat, false, projectionMat);
-    gl.uniformMatrix4fv(program.uniform.modelViewMat, false, modelViewMat);
-    mat3.identity(this.normalMat);
+    gl.uniformMatrix4fv(program.uniform.modelViewMat, false, this.cubesModelViewMat);
     gl.uniformMatrix3fv(program.uniform.normalMat, false, this.normalMat);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
