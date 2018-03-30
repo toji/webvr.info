@@ -84,17 +84,51 @@ found in the LICENSE file.
       var viewMat = mat4.create();
       var vrPresentButton = null;
 
-      var noFrames = WGLUUrl.getBool('noFrames', false);
+      // If true, use a very heavyweight shader to stress the GPU.
       var heavyGpu = WGLUUrl.getBool('heavyGpu', false);
+
+      // Number and size of the static cubes. Warning, large values
+      // don't render right due to overflow of the int16 indices.
       var cubeCount = WGLUUrl.getInt('cubeCount', heavyGpu ? 12 : 10);
       var cubeScale = WGLUUrl.getFloat('cubeScale', 1.0);
+
+      // Busy wait for the specified time to simulate CPU intensive JS.
       var simulatedWorkTimeMs = WGLUUrl.getFloat('workTime', 0);
+
+      // Don't produce frames at all. Simulates a broken app.
+      var noFrames = WGLUUrl.getBool('noFrames', false);
+
+      // Use 1024x1024 per eye instead of the recommended base render
+      // resolution.
       var standardSize = WGLUUrl.getBool('standardSize', false);
+
+      // Multiply the recommended render resolution (or standardSize) in each
+      // direction. renderScale=2 means 4x the pixel count.
       var renderScale = WGLUUrl.getFloat('renderScale', 1.0);
+
+      // Support for automated latency testing.
       var latencyPatch = WGLUUrl.getBool('latencyPatch', false);
       var pureFlickerApp = WGLUUrl.getBool('pureFlickerApp', false);
 
+      // Only submit every Nth presentation frame. The first frame is
+      // rendered, so a large value can be used to simulate a splash screen.
+      var submitInterval = WGLUUrl.getInt('submitInterval', 1);
+
+      // Resize the canvas every N frames, toggling between full and half
+      // resolution.
+      var canvasResizeInterval = WGLUUrl.getInt('canvasResizeInterval', 0);
+
+      // Draw only half the world cubes. Helps test variable render cost
+      // when combined with heavyGpu.
+      var halfOnly = WGLUUrl.getBool('halfOnly', false);
+
+      // Automatically spin the world cubes. Intended for automated testing,
+      // not recommended for viewing in a headset.
+      var autorotate = WGLUUrl.getBool('autorotate', false);
+
       var VELOCITY_SCALE = 0.25;
+
+      var presentationFrameCounter = 0;
 
       // ================================
       // WebVR-specific code begins here.
@@ -141,13 +175,14 @@ found in the LICENSE file.
 
         var textureLoader = new WGLUTextureLoader(gl);
         var texture = textureLoader.loadTexture("media/textures/cube-sea.png");
-        cubeSea = new VRCubeSea(gl, texture, cubeCount, cubeScale, heavyGpu);
+        cubeSea = new VRCubeSea(gl, texture, cubeCount, cubeScale, heavyGpu,
+                                halfOnly, autorotate);
         var enablePerformanceMonitoring = WGLUUrl.getBool(
             'enablePerformanceMonitoring', false);
         stats = new WGLUStats(gl, enablePerformanceMonitoring);
 
         // Wait until we have a WebGL context to resize and start rendering.
-        window.addEventListener("resize", onResize, false);
+        window.addEventListener("resize", onResize.bind(this, 1.0), false);
         onResize();
         window.requestAnimationFrame(onAnimationFrame);
       }
@@ -225,8 +260,9 @@ found in the LICENSE file.
         VRSamplesUtil.addError("Your browser does not support WebVR. See <a href='http://webvr.info'>webvr.info</a> for assistance.");
       }
 
-      function onResize () {
+      function onResize (opt_multiplier) {
         if (vrDisplay && vrDisplay.isPresenting) {
+          var multiplier = opt_multiplier || 1;
           var leftEye = vrDisplay.getEyeParameters("left");
           var rightEye = vrDisplay.getEyeParameters("right");
 
@@ -236,12 +272,13 @@ found in the LICENSE file.
           var renderWidth = standardSize ? 1024 : Math.max(leftEye.renderWidth, rightEye.renderWidth);
           var renderHeight = standardSize ? 1024 : Math.max(leftEye.renderHeight, rightEye.renderHeight);
 
-          webglCanvas.width = renderWidth * 2 * renderScale;
-          webglCanvas.height = renderHeight * renderScale;
+          webglCanvas.width = renderWidth * 2 * renderScale * multiplier;
+          webglCanvas.height = renderHeight * renderScale * multiplier;
         } else {
           webglCanvas.width = webglCanvas.offsetWidth * window.devicePixelRatio;
           webglCanvas.height = webglCanvas.offsetHeight * window.devicePixelRatio;
         }
+        console.log('onResize', webglCanvas.width, webglCanvas.height);
       }
 
       var now = (window.performance && performance.now) ? performance.now.bind(performance) : Date.now;
@@ -278,6 +315,11 @@ found in the LICENSE file.
           vrDisplay.getFrameData(frameData);
 
           if (vrDisplay.isPresenting) {
+            var frameNum = presentationFrameCounter;
+            // Only count frames in presenting mode, to ensure the first
+            // presenting frame has frameNum=0.
+            ++presentationFrameCounter;
+
             if (pureFlickerApp) {
               // Disable normal rendering and only act as a flicker app
               // Useful on slow devices where rendering the cube sea and latency
@@ -288,6 +330,25 @@ found in the LICENSE file.
               gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
               vrDisplay.submitFrame();
               return;
+            }
+
+            // Simulate an app that's only submitting on a subset of animation
+            // frames. This seems to be legal according to the WebVR spec?
+            // frameNum=0 is submitted, so setting submitInterval to a large
+            // number can simulate a splash screen.
+            if (submitInterval && frameNum % submitInterval > 0) {
+              return;
+            }
+
+            // Test resizing canvas while presenting. This doesn't need to be
+            // very efficient, but should work.
+            if (canvasResizeInterval && frameNum % canvasResizeInterval == 0) {
+              // Toggle canvas between half size and normal size.
+              if (Math.floor(frameNum / canvasResizeInterval) % 2) {
+                onResize(0.5);
+              } else {
+                onResize();
+              }
             }
 
             gl.viewport(0, 0, webglCanvas.width * 0.5, webglCanvas.height);
