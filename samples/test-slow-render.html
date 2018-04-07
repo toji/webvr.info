@@ -126,6 +126,10 @@ found in the LICENSE file.
       // not recommended for viewing in a headset.
       var autorotate = WGLUUrl.getBool('autorotate', false);
 
+      // Use antialiasing for the drawing canvas. Default is on, can disable
+      // for performance comparisons.
+      var antialias = WGLUUrl.getBool('antialias', true);
+
       var VELOCITY_SCALE = 0.25;
 
       var presentationFrameCounter = 0;
@@ -159,7 +163,8 @@ found in the LICENSE file.
       function initWebGL (preserveDrawingBuffer) {
         var glAttribs = {
           alpha: false,
-          preserveDrawingBuffer: preserveDrawingBuffer
+          preserveDrawingBuffer: preserveDrawingBuffer,
+          antialias: antialias
         };
         gl = webglCanvas.getContext("webgl", glAttribs);
         if (!gl) {
