@@ -242,12 +242,16 @@ ul {
   list-style: none;
 }
 
-ul li:before {
-  content: "•";
+li {
+  position: relative;
+}
+
+li:before {
   color: #999;
-  display: inline-block;
-  margin-left: -1em;
-  width: 1em;
+  content: "•";
+  left: -1.25em;
+  position: absolute;
+  width: 1.25em;
 }
 
 li + li {
